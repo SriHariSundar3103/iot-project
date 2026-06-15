@@ -1,0 +1,33 @@
+{
+  "name": "hospital-tool-tracking-frontend",
+  "version": "1.0.0",
+  "description": "Smart Hospital Tool Tracking System Frontend",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.16",
+    "axios": "^1.5.0",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^2.5.1",
+    "next": "^14.0.0",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.12.0",
+    "socket.io-client": "^4.7.2",
+    "tailwindcss": "^3.3.5",
+    "xlsx": "^0.18.5",
+    "zustand": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^8.50.0",
+    "eslint-config-next": "^14.0.0"
+  }
+}

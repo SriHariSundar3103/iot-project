@@ -1,0 +1,126 @@
+# Docker Compose - Complete System with MongoDB
+
+version: "3.8"
+
+services:
+  # ==================== MongoDB ====================
+  mongodb:
+    image: mongo:7.0
+    container_name: hospital_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: hospital_tools
+    volumes:
+      - mongo_data:/data/db
+      - ./mongodb-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    networks:
+      - hospital_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== Backend ====================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hospital_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/hospital_tools
+      DB_NAME: hospital_tools
+      JWT_SECRET: ${JWT_SECRET:-your_super_secret_jwt_key}
+      FRONTEND_URL: http://localhost:3000
+      GMAIL_USER: ${GMAIL_USER:-your_email@gmail.com}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-your_app_password}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
+    networks:
+      - hospital_network
+    healthcheck:
+      test: curl -f http://localhost:5000/api/health || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==================== Frontend ====================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000
+        NEXT_PUBLIC_WS_URL: http://localhost:5000
+    container_name: hospital_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+      NEXT_PUBLIC_WS_URL: http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - hospital_network
+
+  # ==================== MongoDB GUI (Optional) ====================
+  mongo-express:
+    image: mongo-express:latest
+    container_name: hospital_mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin123@mongodb:27017
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      - mongodb
+    networks:
+      - hospital_network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  hospital_network:
+    driver: bridge
+
+# ==================== USAGE ====================
+# Build images:
+#   docker-compose build
+#
+# Start all services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f backend
+#   docker-compose logs -f frontend
+#
+# Stop all services:
+#   docker-compose down
+#
+# Clean everything:
+#   docker-compose down -v
+#
+# Access services:
+#   Frontend:     http://localhost:3000
+#   Backend API:  http://localhost:5000
+#   MongoDB GUI:  http://localhost:8081
+#   MongoDB:      mongodb://admin:admin123@localhost:27017
