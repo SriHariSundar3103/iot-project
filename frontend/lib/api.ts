@@ -50,8 +50,9 @@ export const toolsAPI = {
 
 export const transactionsAPI = {
   async getTakenItems(staffId: string) {
-    return axios.get(`${apiBase}/api/transactions/taken/${staffId}`);
+    return axios.get(`${apiBase}/api/staff/${staffId}/taken-items`);
   },
+
   async take(payload: any) {
     return axios.post(`${apiBase}/api/transactions/take`, payload);
   },
